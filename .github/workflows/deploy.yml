@@ -30,8 +30,8 @@ jobs:
       # Add test steps here if you have tests
       - name: Build and push Docker images
         run: |
-          docker build -t VAISHNAVICHAVAN17/mern-server:latest ./server
-          docker build -t VAISHNAVICHAVAN17/mern-client:latest ./client
+          docker build -t vaishnavichavan17/mern-server:latest ./server
+          docker build -t vaishnavichavan17/mern-client:latest ./client
           echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-          docker push VAISHNAVICHAVAN17/mern-server:latest
-          docker push VAISHNAVICHAVAN17/mern-client:latest
+          docker push vaishnavichavan17/mern-server:latest
+          docker push vaishnavichavan17/mern-client:latest
