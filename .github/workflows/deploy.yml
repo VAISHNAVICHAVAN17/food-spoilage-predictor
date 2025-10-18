@@ -27,6 +27,15 @@ jobs:
       - name: Build frontend
         run: npm run build
         working-directory: client
+        
+      - name: Test backend
+        run: npm test
+        working-directory: server
+
+      - name: Test frontend
+        run: npm test -- --watchAll=false
+        working-directory: client
+
       # Add test steps here if you have tests
       - name: Build and push Docker images
         run: |
