@@ -1,46 +1,30 @@
-name: MERN App Deployment
-
-on:
-  push:
-    branches:
-      - main
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-            node-version: '20'
-
-
+          node-version: '20'
       - name: Install backend dependencies
         run: npm ci
         working-directory: server
-
       # - name: Build backend
       #   run: npm run build
       #   working-directory: server
-
       - name: Install frontend dependencies
         run: npm ci
         working-directory: client
-
       - name: Build frontend
         run: npm run build
         working-directory: client
-
       # Add test steps here if you have tests
-
-      # Add deployment steps here (SSH, Docker, or cloud provider)
       - name: Build and push Docker images
-  run: |
-    docker build -t VAISHNAVICHAVAN17/mern-server:latest ./server
-    docker build -t VAISHNAVICHAVAN17/mern-client:latest ./client
-    echo "${{ secrets.Vaishnavi@17 }}" | docker login -u "${{ secrets.VAISHNAVICHAVAN17 }}" --password-stdin
-    docker push VAISHNAVICHAVAN17/mern-server:latest
-    docker push VAISHNAVICHAVAN17/mern-client:latest
-
+        run: |
+          docker build -t VAISHNAVICHAVAN17/mern-server:latest ./server
+          docker build -t VAISHNAVICHAVAN17/mern-client:latest ./client
+          echo "${{ secrets.Vaishnavi@172 }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+          docker push VAISHNAVICHAVAN17/mern-server:latest
+          docker push VAISHNAVICHAVAN17/mern-client:latest
