@@ -25,6 +25,6 @@ jobs:
         run: |
           docker build -t VAISHNAVICHAVAN17/mern-server:latest ./server
           docker build -t VAISHNAVICHAVAN17/mern-client:latest ./client
-          echo "${{ secrets.Vaishnavi@172 }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+          echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
           docker push VAISHNAVICHAVAN17/mern-server:latest
           docker push VAISHNAVICHAVAN17/mern-client:latest
