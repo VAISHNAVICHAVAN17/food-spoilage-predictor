@@ -36,3 +36,11 @@ jobs:
       # Add test steps here if you have tests
 
       # Add deployment steps here (SSH, Docker, or cloud provider)
+      - name: Build and push Docker images
+  run: |
+    docker build -t VAISHNAVICHAVAN17/mern-server:latest ./server
+    docker build -t VAISHNAVICHAVAN17/mern-client:latest ./client
+    echo "${{ secrets.Vaishnavi@17 }}" | docker login -u "${{ secrets.VAISHNAVICHAVAN17 }}" --password-stdin
+    docker push VAISHNAVICHAVAN17/mern-server:latest
+    docker push VAISHNAVICHAVAN17/mern-client:latest
+
