@@ -1,0 +1,11 @@
+.home-wrapper {
+  min-height: 100vh;
+  background: linear-gradient(to right, #e3f2fd, #e8f5e9);
+  padding: 40px;
+}
+
+.home-card {
+  max-width: 600px;
+  background-color: white;
+  border-radius: 16px;
+}

@@ -1,0 +1,17 @@
+/* src/components/Dashboard.css */
+.dashboard-container {
+  max-width: 600px;
+  margin: 40px auto;
+  text-align: center;
+}
+.dashboard-title {
+  margin-bottom: 24px;
+  color: #28a745;
+}
+.dashboard-options .btn {
+  display: block;
+  width: 100%;
+  margin: 12px 0;
+  padding: 12px;
+  font-size: 1.1rem;
+}
