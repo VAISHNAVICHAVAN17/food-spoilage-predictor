@@ -5,7 +5,7 @@ const app = require('../app'); // Or wherever you export your Express app
 describe('ML Prediction API', () => {
   it('predicts shelf life using ML API', async () => {
     const res = await request(app)
-      .post('/api/mlpredict')
+      .post('/api/predictions/mlpredict')
       .send({
         cropType: 'rice',
         amountKg: 600,
