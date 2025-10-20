@@ -34,6 +34,7 @@ app.use('/api/crop', cropRoutes);
 app.use('/api/batches', batchRoutes);
 app.use('/api/importexport', importExportRoutes);
 
+
 // Optional: Additional API endpoint example
 app.post('/api/saveRequest', (req, res) => {
   console.log('Saving prediction data:', req.body);
@@ -49,7 +50,10 @@ mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/food-spoila
   .catch(err => console.error('❌ MongoDB connection error:', err));
 
 // Listen on the specified port
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-});
+if (require.main === module) {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+  });
+}
+module.exports = app;
