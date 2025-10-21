@@ -2,6 +2,7 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import CropSpoilageForm from '../CropSpoilageForm';
+import '@testing-library/jest-dom';
 
 describe('CropSpoilageForm', () => {
   it('renders all required input fields', () => {
