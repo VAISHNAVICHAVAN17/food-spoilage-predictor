@@ -1,7 +1,13 @@
 # ml/test_ml_api.py
 import requests
+# In test_ml_api.py
+import os
+import pytest
+import requests
 
+@pytest.mark.skipif(os.environ.get("CI") == "true", reason="Flask ML server not available in CI")
 def test_ml_predict():
+    # ...existing test...
     url = 'http://localhost:6000/predict'
     payload = {
         "cropType": "wheat",
