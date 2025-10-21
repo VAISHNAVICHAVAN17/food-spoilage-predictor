@@ -21,7 +21,8 @@ export default defineConfig({
   },
    test: {
     environment: 'jsdom',
-    globals: true,        // <-- ADD THIS LINE
+    globals: true,
+    setupFiles: './src/setupTests.js', 
   },
 
   resolve: {
@@ -29,5 +30,6 @@ export default defineConfig({
       // optional: additional polyfills for modules like 'buffer'
     }
   }
+  
   
 });
