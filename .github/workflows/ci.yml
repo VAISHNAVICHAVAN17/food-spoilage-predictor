@@ -27,8 +27,8 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: 18
-      - run: npm install
+          node-version: '20'
+      - run: npm ci
       - run: npm run test
 
   mlapi:
