@@ -9,7 +9,35 @@ const JWT_SECRET = 'your_jwt_secret'; // Use env var in production
 
 // ... (farmerSchema & warehouseSchema - no change)
 
-// POST /register (unchanged)
+router.post('/register', async (req, res) => {
+  const { email, password, userType, ...rest } = req.body;
+
+  try {
+    // Check if user exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Email already registered' });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create and save
+    const user = new User({
+      email,
+      password: hashedPassword,
+      userType,
+      ...rest
+    });
+    await user.save();
+
+    return res.status(201).json({ message: 'Registration successful' });
+  } catch (err) {
+    console.error('Registration error:', err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+});
+
 
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;

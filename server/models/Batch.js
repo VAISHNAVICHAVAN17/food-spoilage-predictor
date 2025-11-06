@@ -3,13 +3,14 @@ const mongoose = require('mongoose');
 const batchSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   cropName: { type: String, required: true },
-  batchNumber: { type: String, required: true },
+  batchNumber: { type: String, required: true, unique: true }, // batchNumber is unique
+  warehouseSizeSqm: { type: Number, required: true }, // <-- add this line
   harvestDate: { type: Date, required: true },
   expiryDate: { type: Date, required: true },
   shelfLife: { type: Number, required: true },
   quantityAvailable: { type: Number, required: true },
   warehouseLocation: { type: String, required: true },
-  lastUpdated: { type: Date, default: Date.now }  // Added field to support updates
+  lastUpdated: { type: Date, default: Date.now }
 }, { timestamps: true });
 
 module.exports = mongoose.models.Batch || mongoose.model('Batch', batchSchema);

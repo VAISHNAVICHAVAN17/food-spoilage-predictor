@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const batchSchema = new mongoose.Schema({
   cropName: { type: String, required: true },
   batchNumber: { type: String, required: true, unique: true },
+  warehouseSizeSqm: { type: Number, required: true }, // <-- add this line
   harvestDate: { type: Date, required: true },
   expiryDate: { type: Date, required: true },
   shelfLife: { type: Number, required: true },

@@ -39,7 +39,7 @@ export default function WarehouseDashboard() {
           <Card sx={{ textAlign: 'center', py: 4 }}>
             <LocalShipping sx={{ fontSize: 40, color: 'info.main' }} />
             <CardContent>
-              <Button variant="outlined" color="info" component={Link} to="/warehouse/importexport" fullWidth>
+              <Button variant="outlined" color="info" component={Link} to="/warehouse/ImportExportDashboard" fullWidth>
                 Import & Export
               </Button>
             </CardContent>

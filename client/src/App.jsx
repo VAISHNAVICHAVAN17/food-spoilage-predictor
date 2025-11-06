@@ -1,6 +1,10 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import Home from './components/Home';
+import About from './components/About';
+import Services from './components/Services';
+import Contact from './components/Contact';
 import Login from './components/Login';
 import FarmerDashboard from './components/FarmerDashboard';
 import WarehouseDashboard from './components/WarehouseDashboard';
@@ -12,7 +16,9 @@ import FarmerHelpBot from './components/FarmerHelpBot';
 import RequireAuth from './utils/RequireAuth';
 import CropSpoilageForm from './components/CropSpoilageForm';
 import DetailedPrediction from "./components/DetailedPrediction";
-import ImportExportForm from './components/ImportExportForm';
+import ImportExportDashboard from './components/ImportExportDashboard';
+import RegisterWarehouse from './components/RegisterWarehouse';
+import RegisterFarmer from './components/RegisterFarmer';
 
 
 function App() {
@@ -24,6 +30,17 @@ function App() {
           {/* Public routes */}
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/" element={<Home />} />                   {/* Home page */}
+        <Route path="/about" element={<About />} />             {/* About Us */}
+        <Route path="/services" element={<Services />} />       {/* Services */}
+        <Route path="/contact" element={<Contact />} /> 
+          <Route path="/register/warehouse" element={<RegisterWarehouse />} />
+          <Route path="/register/farmer" element={<RegisterFarmer />} />
+          <Route path="/registration" element={<>
+          <RegisterWarehouse />
+          <RegisterFarmer />
+          </>} />
+
 
           {/* Protected routes */}
           <Route path="/farmer/dashboard" element={<RequireAuth><FarmerDashboard /></RequireAuth>} />
@@ -38,7 +55,7 @@ function App() {
           <Route path="/advisor" element={<RequireAuth><CropAdvisor /></RequireAuth>} />
           <Route path="/helpbot" element={<RequireAuth><FarmerHelpBot /></RequireAuth>} />
           <Route path="/details" element={<RequireAuth><DetailedPrediction /></RequireAuth>} />
-           <Route path="/warehouse/importexport" element={<RequireAuth><ImportExportForm /></RequireAuth>} />
+           <Route path="/warehouse/ImportExportDashboard" element={<RequireAuth><ImportExportDashboard /></RequireAuth>} />
           {/* Catch-all */}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>

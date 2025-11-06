@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import {
   Container, Paper, Typography, TextField, Button, Box, Stack,
   FormControl, InputLabel, Select, MenuItem
 } from "@mui/material";
+import AuthContext from "../context/AuthContext";
 
+// Initial form state
 const initialFormState = {
   cropName: "",
   cropStage: "",
@@ -20,10 +22,11 @@ const initialFormState = {
 export default function CropForm() {
   const [form, setForm] = useState(initialFormState);
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
+  const userId = user?.userId;
 
   useEffect(() => {
     const fetchLast = async () => {
-      const userId = localStorage.getItem("userId");
       if (!userId) return;
       try {
         const res = await axios.get(`http://localhost:5000/api/crop/user/${userId}`);
@@ -46,7 +49,7 @@ export default function CropForm() {
       }
     };
     fetchLast();
-  }, []);
+  }, [userId]);
 
   const handleChange = (e) => {
     setForm((prev) => ({
@@ -55,27 +58,29 @@ export default function CropForm() {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const userId = localStorage.getItem("userId");
-    if (!userId) return alert("Login required!");
-    const startDate = new Date();
-    const endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + Number(form.durationDays));
-    try {
-      await axios.post("http://localhost:5000/api/crop/submit", {
-        ...form,
-        durationDays: form.durationDays,
-        userId,
-        startDate,
-        endDate,
-      });
-      setForm(initialFormState);    // Clear fields
-      navigate("/farmer/dashboard");       // Redirect to dashboard
-    } catch {
-      alert("Error submitting crop data.");
-    }
-  };
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  if (!userId) return alert("Login required!");
+  
+  const startDate = new Date();
+  const endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + Number(form.durationDays));
+  
+  try {
+    await axios.post("http://localhost:5000/api/crop/submit", {
+      ...form,
+      durationDays: form.durationDays,
+      userId,
+      startDate: startDate.toISOString(),  // Convert to ISO string
+      endDate: endDate.toISOString(),      // Convert to ISO string
+    });
+    setForm(initialFormState);
+    navigate("/croptracker");
+  } catch {
+    alert("Error submitting crop data.");
+  }
+};
+
 
   return (
     <Container maxWidth="sm" sx={{ mt: 7 }}>

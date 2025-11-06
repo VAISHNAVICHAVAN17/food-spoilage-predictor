@@ -5,8 +5,8 @@ const importExportSchema = new mongoose.Schema({
   type: { type: String, enum: ['import', 'export'], required: true },
   quantity: { type: Number, required: true },
   movementDate: { type: Date, required: true },
-  party: { type: String, default: "" },
+  party: { type: String, default: '' },
   status: { type: String, default: 'completed' }
-});
+}, { timestamps: true });
 
 module.exports = mongoose.models.ImportExport || mongoose.model('ImportExport', importExportSchema);

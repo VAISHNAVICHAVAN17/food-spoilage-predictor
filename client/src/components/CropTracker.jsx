@@ -1,17 +1,21 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { Container, Card, Button, Row, Col } from "react-bootstrap";
 import { Chrono } from "react-chrono";
+import AuthContext from "../context/AuthContext";
 
 function CropTracker() {
   const [cropHistory, setCropHistory] = useState([]);
-  const userId = localStorage.getItem("userId");
+  const { user } = useContext(AuthContext);
+  const userId = user?.userId;
 
   const fetchCrops = async () => {
     try {
+      if (!userId) return;
       const res = await axios.get(`http://localhost:5000/api/crop/user/${userId}`);
       setCropHistory(res.data);
     } catch (err) {
+      console.error("Error fetching crops:", err);
       alert("Unable to load crop data.");
     }
   };
@@ -35,7 +39,7 @@ function CropTracker() {
     try {
       await axios.delete(`http://localhost:5000/api/crop/delete/${id}`);
       fetchCrops();
-    } catch  (err) {
+    } catch (err) {
       alert("Failed to delete task.");
     }
   };
@@ -71,7 +75,7 @@ function CropTracker() {
         `📅 End Date: ${end.toLocaleDateString()}`,
         `📆 Days Remaining: ${daysLeft}`,
         `🧪 Soil Type: ${crop.soilType}`,
-        `💧 Irrigation: ${crop.irrigationType}`,
+        `💧 Irrigation: ${crop.irrigationType || "N/A"}`,
         `🧴 Pesticide: ${crop.pesticideUsed || "N/A"}`,
         `🌿 Fertilizer: ${crop.fertilizerUsed || "N/A"}`,
         `⚠️ Issues: ${crop.currentIssues || "None"}`

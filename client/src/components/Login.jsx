@@ -21,17 +21,18 @@ function Login() {
         password,
       });
 
-      const user = {
-        _id: response.data.userId,
-        userType: response.data.userType,
-        name: response.data.name,
-        token: response.data.token,
-        email,
-      };
+     const user = {
+  userId: response.data.userId,
+  userType: response.data.userType,
+  name: response.data.name,
+  token: response.data.token,
+  email,
+};
+localStorage.setItem("user", JSON.stringify(user)); // Always use 'userId'
+setUser(user);
 
-      localStorage.setItem("user", JSON.stringify(user));
-      setUser(user);
 
+      
       if (user.userType === "farmer") {
         navigate("/farmer/dashboard");
       } else if (user.userType === "warehouse") {
@@ -69,9 +70,10 @@ function Login() {
             Login
           </button>
         </form>
-        <p className="mt-3">
-          Don't have an account? <Link to="/home">Register here</Link>
-        </p>
+        <p>
+  Register as <Link to="/register/warehouse">Warehouse</Link> or <Link to="/register/farmer">Farmer</Link>
+</p>
+
       </div>
     </div>
   );

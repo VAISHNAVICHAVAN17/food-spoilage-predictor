@@ -37,6 +37,7 @@ const BatchList = () => {
         <thead>
           <tr>
             <th>Batch Number</th>
+            <th>Warehouse Size (sqm)</th>
             <th>Harvest Date</th>
             <th>Expiry Date</th>
             <th>Quantity</th>
@@ -50,6 +51,7 @@ const BatchList = () => {
           {batches.map(batch => (
             <tr key={batch._id}>
               <td>{batch.batchNumber}</td>
+              <td>{batch.warehouseSizeSqm}</td>
               <td>{batch.harvestDate.slice(0,10)}</td>
               <td>{batch.expiryDate.slice(0,10)}</td>
               <td>{batch.quantityAvailable}</td>

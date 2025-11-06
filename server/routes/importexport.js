@@ -14,17 +14,14 @@ router.post('/', async (req, res) => {
     }
     const batch = await Batch.findById(batchId);
     if (!batch) return res.status(404).json({ message: 'Batch not found' });
-
     if (type === 'export' && quantity > batch.quantityAvailable) {
       return res.status(400).json({ message: 'Insufficient inventory for export' });
     }
     batch.quantityAvailable += (type === 'import' ? quantity : -quantity);
     batch.lastUpdated = new Date();
     await batch.save();
-
     const record = new ImportExport({ batchId, type, quantity, movementDate, party, status: 'completed' });
     await record.save();
-
     res.status(201).json(record);
   } catch (error) {
     console.error(error);

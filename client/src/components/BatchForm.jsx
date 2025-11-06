@@ -3,6 +3,7 @@ import { addBatch, updateBatch } from "../services/batchService";
 
 const initialState = {
   batchNumber: "",
+  warehouseSizeSqm: "",  // <-- ADDED FIELD
   harvestDate: "",
   expiryDate: "",
   shelfLife: "",
@@ -32,9 +33,12 @@ const BatchForm = ({ onSaved, batch }) => {
   }, [batch]);
 
   const handleChange = (e) => {
-    setFormData({ 
-      ...formData, 
-      [e.target.name]: e.target.value 
+    let val = e.target.value;
+    // Parse number for warehouseSizeSqm
+    if(e.target.name === "warehouseSizeSqm" && val !== "") val = Number(val);
+    setFormData({
+      ...formData,
+      [e.target.name]: val
     });
   };
 
@@ -52,6 +56,7 @@ const BatchForm = ({ onSaved, batch }) => {
   return (
     <form onSubmit={handleSubmit} style={{marginBottom:20, marginTop:20}}>
       <input name="batchNumber" value={formData.batchNumber} onChange={handleChange} placeholder="Batch Number" required />
+      <input type="number" name="warehouseSizeSqm" value={formData.warehouseSizeSqm} onChange={handleChange} placeholder="Warehouse Size (sqm)" required />
       <input type="date" name="harvestDate" value={formData.harvestDate ? formData.harvestDate.slice(0,10) : ""} onChange={handleChange} placeholder="Harvest Date" required />
       <input type="date" name="expiryDate" value={formData.expiryDate ? formData.expiryDate.slice(0,10) : ""} onChange={handleChange} placeholder="Expiry Date" required />
       <input type="number" name="shelfLife" value={formData.shelfLife} onChange={handleChange} placeholder="Shelf Life (days)" required />

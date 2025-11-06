@@ -9,7 +9,7 @@ router.get('/', async (req, res) => {
     const batches = await Batch.find({ userId });
     res.json(batches);
   } catch (error) {
-    console.error("Batch GET Error Full Stack:", error.stack || error);
+    console.error("Batch GET Error:", error);
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -17,23 +17,16 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const batchData = req.body;
-    if (!batchData.userId) {
-      return res.status(400).json({ message: "userId is required" });
-    }
+    if (!batchData.userId) return res.status(400).json({ message: "userId is required" });
+    // Ensure only one batch per batchNumber
     const existingBatch = await Batch.findOne({ batchNumber: batchData.batchNumber });
-    if (existingBatch) {
-      return res.status(400).json({ message: `Batch number '${batchData.batchNumber}' already exists.` });
-    }
+    if (existingBatch) return res.status(400).json({ message: `Batch number '${batchData.batchNumber}' already exists.` });
     const newBatch = new Batch(batchData);
     await newBatch.save();
-    console.log("Batch created:", newBatch);
     res.status(201).json(newBatch);
   } catch (error) {
-    console.error("Batch POST Error Full Stack:", error.stack || error);
-    if (error.name === 'ValidationError') {
-      return res.status(400).json({ message: error.message, details: error.errors });
-    }
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Batch POST Error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 });
 
@@ -41,13 +34,12 @@ router.put('/:id', async (req, res) => {
   try {
     const batchId = req.params.id;
     const updatedData = req.body;
-    console.log("Batch PUT received data:", updatedData);
     const updatedBatch = await Batch.findByIdAndUpdate(batchId, updatedData, { new: true });
     if (!updatedBatch) return res.status(404).json({ message: 'Batch not found' });
     res.json(updatedBatch);
   } catch (error) {
-    console.error("Batch PUT Error Full Stack:", error.stack || error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Batch PUT Error:", error);
+    res.status(500).json({ message: "Server error" });
   }
 });
 

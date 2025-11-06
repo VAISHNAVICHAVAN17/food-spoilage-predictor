@@ -1,4 +1,3 @@
-// src/components/FarmerDashboard.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Grid, Card, CardContent, Typography, Button } from '@mui/material';
@@ -13,7 +12,6 @@ export default function FarmerDashboard() {
       <Typography variant="subtitle1" align="center" color="text.secondary" gutterBottom>
         Welcome! Choose an option to manage your farm efficiently.
       </Typography>
-
       <Grid container spacing={3} sx={{ mt: 4 }}>
         <Grid item xs={12} sm={4}>
           <Card sx={{ textAlign: 'center', py: 4 }}>

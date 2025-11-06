@@ -17,6 +17,7 @@ const WarehouseInventory = () => {
     shelfLife: 0,
     quantityAvailable: 0,
     warehouseLocation: "",
+    warehouseSizeSqm: "", // <-- NEW FIELD
     userId: null,
   });
   const [submitError, setSubmitError] = useState(null);
@@ -25,42 +26,52 @@ const WarehouseInventory = () => {
   const [addQuantity, setAddQuantity] = useState("");
   const [removeQuantity, setRemoveQuantity] = useState("");
 
-  // Helper: calculate shelf life years between harvest and expiry
   const calculateShelfLife = (harvestDate, expiryDate) => {
     if (!harvestDate || !expiryDate) return 0;
     const diffTime = new Date(expiryDate) - new Date(harvestDate);
     return parseFloat((diffTime / (1000 * 60 * 60 * 24 * 365.25)).toFixed(2));
   };
 
-  // On mount or when user changes, load the batch and set static view
   useEffect(() => {
-    if (!user?._id) return;
-    getBatches(user._id)
-      .then((data) => {
-        if (data.length > 0) {
-          const b = data[0];
-          setBatch(b);
-          setFormData({
-            cropName: b.cropName,
-            batchNumber: b.batchNumber,
-            harvestDate: b.harvestDate.slice(0, 10),
-            expiryDate: b.expiryDate.slice(0, 10),
-            shelfLife: calculateShelfLife(b.harvestDate, b.expiryDate),
-            quantityAvailable: b.quantityAvailable,
-            warehouseLocation: b.warehouseLocation,
-            userId: user._id,
-          });
-          setEditMode(false); // ALWAYS static if batch exists
-        } else {
-          setFormData((prev) => ({ ...prev, userId: user._id }));
-          setBatch(null);
-          setEditMode(true); // New user: form editable on first load
-        }
-      })
-      .catch(console.error);
+    if (user && user.userId) {
+      getBatches(user.userId)
+        .then((data) => {
+          if (data.length > 0) {
+            const b = data[0];
+            setBatch(b);
+            setFormData({
+              cropName: b.cropName,
+              batchNumber: b.batchNumber,
+              harvestDate: b.harvestDate.slice(0, 10),
+              expiryDate: b.expiryDate.slice(0, 10),
+              shelfLife: calculateShelfLife(b.harvestDate, b.expiryDate),
+              quantityAvailable: b.quantityAvailable,
+              warehouseLocation: b.warehouseLocation,
+              warehouseSizeSqm: b.warehouseSizeSqm, // <- NEW FIELD
+              userId: user.userId,
+            });
+            setEditMode(false);
+          } else {
+            setFormData({
+              cropName: "",
+              batchNumber: "",
+              harvestDate: "",
+              expiryDate: "",
+              shelfLife: 0,
+              quantityAvailable: 0,
+              warehouseLocation: "",
+              warehouseSizeSqm: "", // <- NEW FIELD
+              userId: user.userId,
+            });
+            setBatch(null);
+            setEditMode(true);
+          }
+        })
+        .catch(console.error);
+    }
   }, [user]);
 
-  if (!user) {
+  if (!user || !user.userId) {
     return <p>Loading user data...</p>;
   }
 
@@ -69,10 +80,14 @@ const WarehouseInventory = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     let val = value;
-    if (name === "quantityAvailable" || name === "shelfLife") {
+    if (
+      name === "quantityAvailable" ||
+      name === "shelfLife" ||
+      name === "warehouseSizeSqm"
+    ) {
       val = value === "" ? "" : Number(value);
     }
-    let updatedData = { ...formData, [name]: val, userId: user?._id ?? null };
+    let updatedData = { ...formData, [name]: val, userId: user?.userId ?? null };
     if (name === "harvestDate" || name === "expiryDate") {
       updatedData.shelfLife = calculateShelfLife(
         name === "harvestDate" ? value : formData.harvestDate,
@@ -82,7 +97,6 @@ const WarehouseInventory = () => {
     setFormData(updatedData);
   };
 
-  // Cancel edits and reset form data from last saved batch
   const handleCancel = () => {
     if (!batch) return;
     setFormData({
@@ -93,19 +107,21 @@ const WarehouseInventory = () => {
       shelfLife: batch.shelfLife,
       quantityAvailable: batch.quantityAvailable,
       warehouseLocation: batch.warehouseLocation,
+      warehouseSizeSqm: batch.warehouseSizeSqm, // <- NEW FIELD
       userId: batch.userId,
     });
     setEditMode(false);
     setSubmitError(null);
   };
 
-  // On submit, always make form static if save is successful
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitError(null);
     if (!formData.userId) return setSubmitError("User ID missing.");
     if (!formData.cropName) return setSubmitError("Crop name required.");
     if (!formData.batchNumber) return setSubmitError("Batch number required.");
+    if (!(typeof formData.warehouseSizeSqm === "number" && formData.warehouseSizeSqm > 0))
+      return setSubmitError("Warehouse size (sqm) is required and must be positive.");
     if (!isValidDate(formData.harvestDate)) return setSubmitError("Invalid harvest date.");
     if (!isValidDate(formData.expiryDate)) return setSubmitError("Invalid expiry date.");
     if (!(typeof formData.shelfLife === "number" && formData.shelfLife >= 0))
@@ -120,13 +136,13 @@ const WarehouseInventory = () => {
         harvestDate: new Date(formData.harvestDate),
         expiryDate: new Date(formData.expiryDate),
         shelfLife: Number(formData.shelfLife),
+        warehouseSizeSqm: Number(formData.warehouseSizeSqm), // <- NEW FIELD
         quantityAvailable: Number(formData.quantityAvailable),
         userId: formData.userId,
       };
-
       const result = batch ? await updateBatch(batch._id, payload) : await addBatch(payload);
       setBatch(result);
-      setEditMode(false); // ALWAYS static after save!
+      setEditMode(false);
       setSubmitError(null);
     } catch (error) {
       if (error.response?.data?.message) {
@@ -134,11 +150,9 @@ const WarehouseInventory = () => {
       } else {
         setSubmitError("Failed to submit. Please try again.");
       }
-      console.error(error);
     }
   };
 
-  // Dynamic quantity management (always allowed)
   const handleAdjustQuantity = async (qty, unitMultiplier, isAdd) => {
     setUpdateError(null);
     if (isNaN(qty)) {
@@ -153,21 +167,19 @@ const WarehouseInventory = () => {
         ...batch,
         quantityAvailable: newQuantity,
         lastUpdated: new Date(),
-        userId: user._id,
+        userId: user.userId,
       };
       const updated = await updateBatch(batch._id, updatePayload);
       setBatch(updated);
       setFormData((prev) => ({ ...prev, quantityAvailable: newQuantity }));
       if (isAdd) setAddQuantity("");
       else setRemoveQuantity("");
-    } catch (error) {
+    } catch {
       setUpdateError(`Failed to ${isAdd ? "add" : "remove"} quantity.`);
-      console.error(error);
     }
   };
 
-  // ----- RENDER LOGIC -----
-  // 1. Static (read-only) view for batch + edit button
+  // Static batch view with quantity controls
   if (!editMode && batch) {
     return (
       <div className="container mt-4">
@@ -180,6 +192,7 @@ const WarehouseInventory = () => {
           <p><strong>Shelf Life (Years):</strong> {batch.shelfLife}</p>
           <p><strong>Quantity Available (Tons):</strong> {batch.quantityAvailable}</p>
           <p><strong>Warehouse Location:</strong> {batch.warehouseLocation}</p>
+          <p><strong>Warehouse Size (sqm):</strong> {batch.warehouseSizeSqm}</p>
         </div>
         <button className="btn btn-warning mt-2" onClick={() => setEditMode(true)}>
           Edit Batch Details
@@ -263,7 +276,7 @@ const WarehouseInventory = () => {
     );
   }
 
-  // 2. Editable form for new batch or editing
+  // Editable form for new batch or editing
   return (
     <div className="container mt-4">
       {submitError && (
@@ -290,6 +303,20 @@ const WarehouseInventory = () => {
             name="batchNumber"
             className="form-control"
             value={formData.batchNumber}
+            onChange={handleChange}
+            required
+            readOnly={!editMode}
+          />
+        </div>
+        <div className="col-md-6">
+          <label className="form-label">Warehouse Size (sqm)</label>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            name="warehouseSizeSqm"
+            className="form-control"
+            value={formData.warehouseSizeSqm}
             onChange={handleChange}
             required
             readOnly={!editMode}

@@ -1,11 +1,10 @@
-// src/components/DetailedPrediction.jsx
 import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Container, Paper, Typography, Button, Divider,
-  Box, Grid, Table, TableBody, TableRow, TableCell, List, ListItem, ListItemIcon, ListItemText
+  Box, Grid, Table, TableBody, TableRow, TableCell, List, ListItem, ListItemText
 } from "@mui/material";
-import { Checklist, TrendingUp, TrendingDown, Info, CalendarMonth } from "@mui/icons-material";
+import { TrendingUp, TrendingDown } from "@mui/icons-material";
 
 export default function DetailedPrediction() {
   const { state: data } = useLocation();
@@ -20,7 +19,7 @@ export default function DetailedPrediction() {
     );
   }
 
-  // Utility to format date strings to local date format or fallback to "N/A"
+  // Util
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     const dateObj = new Date(dateString);
@@ -28,14 +27,18 @@ export default function DetailedPrediction() {
     return dateObj.toLocaleDateString();
   };
 
-  // Classify reasons
-  const increasingReasons = data.adjustmentReasons?.filter(r =>
-    r.toLowerCase().includes('extended') || r.toLowerCase().includes('increase')
-  ) || [];
+  // Use ONLY backend-provided arrays (no filtering)
+  const increasingReasons = data.increasingFactors || [];
+  const decreasingReasons = data.decreasingFactors || [];
 
-  const decreasingReasons = data.adjustmentReasons?.filter(r =>
-    r.toLowerCase().includes('reduced') || r.toLowerCase().includes('decrease')
-  ) || [];
+  // All reasons for the explanations section
+  const allReasons = (data.adjustmentReasons ?? []).concat(data.suggestions ?? []);
+
+  // Robust field picking
+  const predictedExpiryVal = data.predictedExpiryDate || data.predictedExpiry;
+  const tempVal = data.temperature != null ? data.temperature : data.temp;
+  const humidityVal = data.humidity;
+  const storageDensityVal = (data.storageDensity != null && data.storageDensity !== 'N/A') ? data.storageDensity : "N/A";
 
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>
@@ -75,19 +78,23 @@ export default function DetailedPrediction() {
             </TableRow>
             <TableRow>
               <TableCell><b>Predicted Expiry Date</b></TableCell>
-              <TableCell><b style={{ color: "#b71c1c" }}>{formatDate(data.predictedExpiry)}</b></TableCell>
+              <TableCell>
+                <b style={{ color: "#b71c1c" }}>
+                  {formatDate(predictedExpiryVal)}
+                </b>
+              </TableCell>
             </TableRow>
             <TableRow>
               <TableCell><b>Temperature</b></TableCell>
-              <TableCell>{data.temp != null ? `${data.temp} °C` : "N/A"}</TableCell>
+              <TableCell>{tempVal != null && tempVal !== "N/A" ? `${tempVal} °C` : "N/A"}</TableCell>
             </TableRow>
             <TableRow>
               <TableCell><b>Humidity</b></TableCell>
-              <TableCell>{data.humidity != null ? `${data.humidity} %` : "N/A"}</TableCell>
+              <TableCell>{humidityVal != null && humidityVal !== "N/A" ? `${humidityVal} %` : "N/A"}</TableCell>
             </TableRow>
             <TableRow>
               <TableCell><b>Storage Density</b></TableCell>
-              <TableCell>{data.storageDensity != null ? data.storageDensity : "N/A"}</TableCell>
+              <TableCell>{storageDensityVal}</TableCell>
             </TableRow>
             <TableRow>
               <TableCell><b>Risk Level</b></TableCell>
@@ -110,7 +117,7 @@ export default function DetailedPrediction() {
           </TableBody>
         </Table>
 
-        {/* Reasons */}
+        {/* Reason factors (dynamically rendered) */}
         <Grid container spacing={3}>
           <Grid item xs={12} md={6}>
             <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
@@ -126,11 +133,12 @@ export default function DetailedPrediction() {
                   ))}
                 </List>
               ) : (
-                <Typography variant="body2" color="text.secondary">No factors increased shelf life.</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  No factors increased shelf life.
+                </Typography>
               )}
             </Paper>
           </Grid>
-
           <Grid item xs={12} md={6}>
             <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
               <Typography variant="h6" sx={{ color: "red", mb: 1 }}>
@@ -145,34 +153,34 @@ export default function DetailedPrediction() {
                   ))}
                 </List>
               ) : (
-                <Typography variant="body2" color="text.secondary">No factors decreased shelf life.</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  No factors decreased shelf life.
+                </Typography>
               )}
             </Paper>
           </Grid>
         </Grid>
 
-        {/* Recommendations */}
-        {data.suggestions?.length > 0 && (
-          <Box sx={{ mt: 4 }}>
-            <Typography variant="h6" color="success.main" sx={{ fontWeight: 600, mb: 1 }}>
-              <Checklist fontSize="small" sx={{ mr: 1 }} /> Recommendations
-            </Typography>
-            <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
-              <List dense>
-                {data.suggestions.map((s, i) => (
-                  <ListItem key={i}>
-                    <ListItemText primary={s} />
-                  </ListItem>
-                ))}
-              </List>
-            </Paper>
-          </Box>
+        {/* Explanations block */}
+        <Typography variant="subtitle2" sx={{ mt: 2 }}>Explanations:</Typography>
+        {allReasons.length > 0 ? (
+          <List>
+            {allReasons.map((reason, idx) => (
+              <ListItem key={idx}>
+                <ListItemText primary={reason} />
+              </ListItem>
+            ))}
+          </List>
+        ) : (
+          <Typography variant="body2" color="text.secondary">
+            Not available for ML-based prediction.
+          </Typography>
         )}
 
         {/* Back Button */}
         <Box sx={{ mt: 4, textAlign: "right" }}>
           <Button variant="outlined" onClick={() => navigate("/predict", { state: data })}>
-            Back to Summary
+            BACK TO SUMMARY
           </Button>
         </Box>
       </Paper>

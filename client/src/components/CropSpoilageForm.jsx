@@ -1,5 +1,4 @@
-// src/components/CropSpoilageForm.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -7,16 +6,21 @@ import {
   CircularProgress, Paper, List, ListItem, Chip
 } from "@mui/material";
 
+import AuthContext from "../context/AuthContext";
+import { getBatches } from "../services/batchService";
+
 export default function CropSpoilageForm() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useContext(AuthContext);
 
   // Restore summary if coming from detail page state
   const [summary, setSummary] = useState(location.state || null);
 
+  const [inventoryBatch, setInventoryBatch] = useState(null);
   const [form, setForm] = useState({
     cropType: "",
-    amountKg: "",
+    amountTons: "",      // We'll show/edit in tons
     warehouseSizeSqm: "",
     city: "",
     manufactureDate: "",
@@ -24,18 +28,62 @@ export default function CropSpoilageForm() {
   });
   const [loading, setLoading] = useState(false);
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  // Fetch latest batch/inventory for this user
+  useEffect(() => {
+    if (user && user.userId) {
+      getBatches(user.userId)
+        .then(data => {
+          if (data.length > 0) {
+            setInventoryBatch(data[0]);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [user]);
 
-  // UPDATED: Save prediction request/result after prediction
+  // Auto-populate form from inventory batch
+  useEffect(() => {
+    if (inventoryBatch) {
+      setForm({
+        cropType: inventoryBatch.cropName || "",
+        amountTons: inventoryBatch.quantityAvailable || "", // Tons (stored as tons)
+        warehouseSizeSqm: inventoryBatch.warehouseSizeSqm || "",
+        city: inventoryBatch.warehouseLocation || "",
+        manufactureDate: inventoryBatch.harvestDate ? inventoryBatch.harvestDate.slice(0, 10) : "",
+        expiryDate: inventoryBatch.expiryDate ? inventoryBatch.expiryDate.slice(0, 10) : ""
+      });
+    }
+  }, [inventoryBatch]);
+
+  // Only allow editing "amountTons"
+  const handleChange = (e) => {
+    if (e.target.name === "amountTons") {
+      setForm({ ...form, [e.target.name]: e.target.value });
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setSummary(null);
 
-    try {
-      const res = await axios.post("http://localhost:5000/api/predictions", form);
+    // Convert amountTons to kg before sending to predictor API
+    const formToSend = {
+      ...form,
+      amountKg: Number(form.amountTons) * 1000,
+      warehouseSizeSqm: form.warehouseSizeSqm,
+      cropType: form.cropType,
+      city: form.city,
+      manufactureDate: form.manufactureDate,
+      expiryDate: form.expiryDate
+    };
 
-      // Create enhanced summary with form dates explicitly included
+    try {
+      const res = await axios.post(
+        "http://localhost:5000/api/predictions/mlpredict",
+        formToSend
+      );
+
       const fullSummary = {
         ...res.data,
         manufactureDate: form.manufactureDate,
@@ -44,12 +92,11 @@ export default function CropSpoilageForm() {
 
       setSummary(fullSummary);
 
-      // ✅ Save both request and prediction to backend
+      // Save both request and prediction to backend (still sending amountKg for consistency)
       await axios.post("http://localhost:5000/api/saveRequest", {
-        ...form,
+        ...formToSend,
         predictionResult: res.data
       });
-
     } catch (err) {
       console.error("❌ Prediction request failed:", err);
     } finally {
@@ -57,24 +104,11 @@ export default function CropSpoilageForm() {
     }
   };
 
-  // Helpers to classify reasons
-  const increasingReasons = summary?.adjustmentReasons?.filter(r =>
-    r.toLowerCase().includes("extended") || r.toLowerCase().includes("increase")
-  ) || [];
-
-  const decreasingReasons = summary?.adjustmentReasons?.filter(r =>
-    r.toLowerCase().includes("reduced") || r.toLowerCase().includes("decrease")
-  ) || [];
-
-  // Debugging to check summary data
-  console.log("CropSpoilageForm summary state:", summary);
-
   return (
     <Container maxWidth="sm" sx={{ mt: 5 }}>
-      {/* Form */}
       <Paper elevation={3} sx={{ p: 4 }}>
         <Typography variant="h5" gutterBottom color="primary">
-          🌾 Quick Crop Storage Check
+          🌾 Quick Crop Spoilage Prediction Check
         </Typography>
 
         <Box
@@ -88,14 +122,14 @@ export default function CropSpoilageForm() {
             label="Crop Type"
             name="cropType"
             value={form.cropType}
-            onChange={handleChange}
             required
+            InputProps={{ readOnly: true }}
           />
           <TextField
-            label="Amount (kg)"
+            label="Amount (tons)"
             type="number"
-            name="amountKg"
-            value={form.amountKg}
+            name="amountTons"
+            value={form.amountTons}
             onChange={handleChange}
             required
           />
@@ -104,33 +138,33 @@ export default function CropSpoilageForm() {
             type="number"
             name="warehouseSizeSqm"
             value={form.warehouseSizeSqm}
-            onChange={handleChange}
             required
+            InputProps={{ readOnly: true }}
           />
           <TextField
             label="City"
             name="city"
             value={form.city}
-            onChange={handleChange}
             required
+            InputProps={{ readOnly: true }}
           />
           <TextField
             label="Manufacture Date"
             type="date"
             name="manufactureDate"
             value={form.manufactureDate}
-            onChange={handleChange}
             InputLabelProps={{ shrink: true }}
             required
+            InputProps={{ readOnly: true }}
           />
           <TextField
             label="Expiry Date (Supplier)"
             type="date"
             name="expiryDate"
             value={form.expiryDate}
-            onChange={handleChange}
             InputLabelProps={{ shrink: true }}
             required
+            InputProps={{ readOnly: true }}
           />
           <Button type="submit" variant="contained" disabled={loading}>
             {loading ? <CircularProgress size={24} color="inherit" /> : "Get Summary"}
@@ -144,67 +178,37 @@ export default function CropSpoilageForm() {
           <Typography variant="h6" color="primary">
             📊 Summary
           </Typography>
-          <Typography>Temperature: {summary.temp}°C</Typography>
+          <Typography>Temperature: {summary.temp ?? summary.temperature}°C</Typography>
           <Typography>Humidity: {summary.humidity}%</Typography>
-          <Typography>Predicted Expiry: {summary.predictedExpiry}</Typography>
+          <Typography>Predicted Expiry: {summary.predictedExpiry ?? summary.predictedExpiryDate}</Typography>
           <Typography>Risk: {summary.riskLevel}</Typography>
 
-          {/* Increasing reasons */}
-          <Typography
-            variant="subtitle1"
-            sx={{ color: "green", fontWeight: 600, mt: 2 }}
-          >
-            Increasing Shelf Life
-          </Typography>
-          <List>
-            {increasingReasons.length > 0 ? (
-              increasingReasons.map((reason, idx) => (
-                <ListItem key={idx}>
-                  <Chip label={reason} color="success" variant="outlined" />
-                </ListItem>
-              ))
-            ) : (
-              <Typography variant="body2" color="textSecondary" sx={{ pl: 2 }}>
-                None
-              </Typography>
-            )}
-          </List>
-
-          {/* Decreasing reasons */}
-          <Typography
-            variant="subtitle1"
-            sx={{ color: "red", fontWeight: 600, mt: 2 }}
-          >
-            Decreasing Shelf Life
-          </Typography>
-          <List>
-            {decreasingReasons.length > 0 ? (
-              decreasingReasons.map((reason, idx) => (
-                <ListItem key={idx}>
-                  <Chip label={reason} color="error" variant="outlined" />
-                </ListItem>
-              ))
-            ) : (
-              <Typography variant="body2" color="textSecondary" sx={{ pl: 2 }}>
-                None
-              </Typography>
-            )}
-          </List>
-
-          {/* Recommendations */}
-          {summary.suggestions?.length > 0 && (
+          <Typography variant="subtitle2" sx={{ mt: 2 }}>Explanations:</Typography>
+          {(summary.adjustmentReasons?.length > 0 || summary.suggestions?.length > 0) ? (
             <>
-              <Typography variant="subtitle1" color="success" sx={{ mt: 2 }}>
-                Recommendations
-              </Typography>
-              <List>
-                {summary.suggestions.map((s, i) => (
-                  <ListItem key={i}>
-                    <Chip label={s} color="success" />
-                  </ListItem>
-                ))}
-              </List>
+              {summary.adjustmentReasons?.length > 0 && (
+                <List>
+                  {summary.adjustmentReasons.map((reason, idx) => (
+                    <ListItem key={idx}>
+                      <Chip label={reason} color="info" variant="outlined" />
+                    </ListItem>
+                  ))}
+                </List>
+              )}
+              {summary.suggestions?.length > 0 && (
+                <List>
+                  {summary.suggestions.map((sg, idx) => (
+                    <ListItem key={idx}>
+                      <Chip label={sg} color="primary" variant="outlined" />
+                    </ListItem>
+                  ))}
+                </List>
+              )}
             </>
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              Not available for ML-based prediction.
+            </Typography>
           )}
 
           <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>

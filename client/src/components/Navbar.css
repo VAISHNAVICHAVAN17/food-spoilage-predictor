@@ -31,3 +31,52 @@
 .logout-btn:hover {
   background-color: #c82333;
 }
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 32px;
+  background: linear-gradient(90deg, #198754 0%, #43ea7a 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(20, 170, 90, 0.10);
+  border-radius: 0 0 16px 16px;
+}
+
+.navbar-brand a {
+  font-size: 1.75rem;
+  font-weight: bold;
+  color: white;
+  text-decoration: none;
+  letter-spacing: 1px;
+}
+
+.navbar-links a {
+  margin-left: 18px;
+  font-weight: 500;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  padding: 7px 16px;
+  transition: background 0.2s;
+}
+
+.navbar-links a:hover,
+.logout-btn:hover {
+  background-color: #166534;
+  color: #fff;
+}
+
+.logout-btn {
+  margin-left: 16px;
+  padding: 7px 16px;
+  background-color: #dc3545;
+  border: none;
+  color: white;
+  cursor: pointer;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+.logout-btn:hover {
+  background-color: #c82333;
+}
